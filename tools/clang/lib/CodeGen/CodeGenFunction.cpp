@@ -626,6 +626,21 @@ void CodeGenFunction::StartFunction(GlobalDecl GD,
 
   llvm::BasicBlock *EntryBB = createBasicBlock("entry", CurFn);
 
+  // VSRKernel ....
+  if (const FunctionDecl *FD = dyn_cast_or_null<FunctionDecl>(D)) {
+    if (const VSRKernelAttr * attr = FD->getAttr<VSRKernelAttr>()) {
+      Fn->addFnAttr(llvm::Attribute::NoInline);
+      Fn->addFnAttr("VSRKernel");
+
+      unsigned opId = attr->getNumber();
+      llvm::Function *F;
+      F = CGM.getIntrinsic(llvm::Intrinsic::VSRKernel_operator);
+      Builder.SetInsertPoint(EntryBB);
+      Builder.CreateCall(F, llvm::ConstantInt::get(Int16Ty, opId));
+      llvm::errs() << ">>>> CREATE AN VSR_KERNEL_OPERATOR CALL " << opId << "\n";
+    }
+  }
+
   // Create a marker to make it easy to insert allocas into the entryblock
   // later.  Don't create this with the builder, because we don't want it
   // folded.

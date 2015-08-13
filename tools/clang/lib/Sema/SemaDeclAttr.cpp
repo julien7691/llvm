@@ -3834,6 +3834,23 @@ static void handleObjCPreciseLifetimeAttr(Sema &S, Decl *D,
              ObjCPreciseLifetimeAttr(Attr.getRange(), S.Context,
                                      Attr.getAttributeSpellingListIndex()));
 }
+//===----------------------------------------------------------------------===//
+// VSR specific attribute handlers.
+//===----------------------------------------------------------------------===//
+static void handleVSRKernelAttr(Sema &S, Decl *D, const AttributeList &Attr){
+  Expr *E = Attr.getArgAsExpr(0);
+  llvm::APSInt ArgNum(32);
+  if (E->isTypeDependent() || E->isValueDependent() ||
+      !E->isIntegerConstantExpr(ArgNum, S.Context)) {
+    S.Diag(Attr.getLoc(), diag::err_attribute_argument_type)
+      << Attr.getName() << AANT_ArgumentIntegerConstant
+      << E->getSourceRange();
+    return;
+  }
+  D->addAttr(::new (S.Context) VSRKernelAttr(
+      Attr.getRange(), S.Context, ArgNum.getZExtValue(),
+      Attr.getAttributeSpellingListIndex()));
+}
 
 //===----------------------------------------------------------------------===//
 // Microsoft specific attribute handlers.
@@ -4654,7 +4671,10 @@ static void ProcessDeclAttribute(Sema &S, Scope *scope, Decl *D,
   case AttributeList::AT_OpenCLImageAccess:
     handleSimpleAttribute<OpenCLImageAccessAttr>(S, D, Attr);
     break;
-
+  // VSR attributes:
+  case AttributeList::AT_VSRKernel:
+    handleVSRKernelAttr(S, D, Attr);
+    break;
   // Microsoft attributes:
   case AttributeList::AT_MsStruct:
     handleSimpleAttribute<MsStructAttr>(S, D, Attr);

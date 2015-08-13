@@ -809,6 +809,12 @@ def Mips16 : InheritableAttr, TargetSpecificAttr<TargetMips> {
   let Documentation = [Undocumented];
 }
 
+def VSRKernel : InheritableAttr {
+  let Spellings = [GNU<"VSRKernel">];
+  let Args = [UnsignedArgument<"Number">];
+  let Documentation = [Undocumented];
+}
+
 def Mode : Attr {
   let Spellings = [GCC<"mode">];
   let Args = [IdentifierArgument<"Mode">];
